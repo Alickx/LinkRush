@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alickx.linkrush.handler.mapper.LinkInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.alickx.linkrush.handler.domain.LinkInfo">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="targetLink" column="target_link" jdbcType="VARCHAR"/>
+            <result property="shortLink" column="short_link" jdbcType="VARCHAR"/>
+            <result property="linkShareCode" column="link_share_code" jdbcType="VARCHAR"/>
+            <result property="expireTime" column="expire_time" jdbcType="TIMESTAMP"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,target_link,short_link,
+        link_share_code,expire_time,create_time,
+        update_time
+    </sql>
+</mapper>

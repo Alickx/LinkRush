@@ -1,0 +1,16 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: link-rush-handler
+  datasource:
+    url: jdbc:mysql://localhost:3306/link_rush?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      bootstrap-servers: localhost:9092

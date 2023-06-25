@@ -1,0 +1,13 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: link-rush-api
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
