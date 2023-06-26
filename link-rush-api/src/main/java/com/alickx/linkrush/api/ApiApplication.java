@@ -1,9 +1,13 @@
 package com.alickx.linkrush.api;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication(scanBasePackages = {"com.alickx.linkrush"})
+@MapperScan("com.alickx.linkrush.api.mapper")
+@EnableCaching
 public class ApiApplication {
     public static void main(String[] args) {
 

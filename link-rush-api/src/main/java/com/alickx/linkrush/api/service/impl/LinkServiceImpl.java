@@ -1,20 +1,26 @@
 package com.alickx.linkrush.api.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.servlet.ServletUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alickx.linkrush.api.constant.CommonConstant;
 import com.alickx.linkrush.api.constant.KafkaTopicConstant;
 import com.alickx.linkrush.api.constant.RedisKeyConstant;
 import com.alickx.linkrush.api.constant.enums.LinkExpireTypeEnum;
 import com.alickx.linkrush.api.dto.LinkInfoDTO;
+import com.alickx.linkrush.api.dto.LinkQueryInfoDTO;
 import com.alickx.linkrush.api.manager.LinkManagerService;
+import com.alickx.linkrush.api.mapper.SystemConfigMapper;
 import com.alickx.linkrush.api.sender.LinkSender;
 import com.alickx.linkrush.api.service.LinkService;
 import com.alickx.linkrush.api.service.LinkShareService;
+import com.alickx.linkrush.api.service.SystemConfigService;
 import com.alickx.linkrush.api.util.BlackListUtil;
+import com.alickx.linkrush.api.util.RequestUtil;
 import com.alickx.linkrush.api.vo.LinkCreateVO;
 import com.alickx.linkrush.common.exception.BusinessException;
 import com.alickx.linkrush.common.util.RedisUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +40,8 @@ public class LinkServiceImpl implements LinkService {
 
     private final LinkSender linkSender;
 
+    private final SystemConfigService systemConfigService;
+
     private static final Integer MAX_LINK_COUNT = 3;
 
     @Override
@@ -52,7 +60,7 @@ public class LinkServiceImpl implements LinkService {
             throw new BusinessException("目标链接或参数不合法");
         }
 
-        // 检查该域名共有创建了多少个短链，上限是3个
+        // TODO 检查该域名共有创建了多少个短链，上限是3个
 
 
         // 生成分享码
@@ -60,7 +68,12 @@ public class LinkServiceImpl implements LinkService {
 
 
         // 保存到缓存
-        String shortLink = this.getCurrentDomain() + linkShareCode;
+        String sysDomain = systemConfigService.getSysDomain();
+        if (StrUtil.isBlank(sysDomain)) {
+            throw new BusinessException("系统域名为空");
+        }
+
+        String shortLink = sysDomain + linkShareCode;
         Long expireTime = expireTypeEnum.getExpireTime();
         LocalDateTime expirationDate = LocalDateTime.now().plusSeconds(expireTime);
 
@@ -79,7 +92,7 @@ public class LinkServiceImpl implements LinkService {
     }
 
     @Override
-    public LinkInfoDTO queryLinkInfo(String linkShareCode) {
+    public LinkInfoDTO queryLinkInfo(String linkShareCode, HttpServletRequest request) {
 
         // 检查是否为合法的分享码
         if (!linkShareService.isValidLinkShareCode(linkShareCode)) {
@@ -93,9 +106,31 @@ public class LinkServiceImpl implements LinkService {
         }
 
         LinkInfoDTO linkInfoDTO = JSON.parseObject(jsonString, LinkInfoDTO.class);
-        linkSender.send(KafkaTopicConstant.LINK_QUERY_EVENT_TOPIC,linkInfoDTO);
+
+        // 获取请求信息
+        LinkQueryInfoDTO linkQueryInfoDTO = this.getQueryInfo(linkInfoDTO,request);
+
+        linkSender.send(KafkaTopicConstant.LINK_QUERY_EVENT_TOPIC,linkQueryInfoDTO);
 
         return linkInfoDTO;
+
+    }
+
+    private LinkQueryInfoDTO getQueryInfo(LinkInfoDTO linkInfoDTO, HttpServletRequest request) {
+
+        LinkQueryInfoDTO linkQueryInfoDTO = new LinkQueryInfoDTO();
+        linkQueryInfoDTO.setTargetLink(linkInfoDTO.getTargetLink());
+        linkQueryInfoDTO.setShortLink(linkInfoDTO.getShortLink());
+        linkQueryInfoDTO.setLinkShareCode(linkInfoDTO.getLinkShareCode());
+        linkQueryInfoDTO.setExpireDate(linkInfoDTO.getExpirationDate());
+        linkQueryInfoDTO.setIp(RequestUtil.getIpAddr(request));
+        linkQueryInfoDTO.setReferer(RequestUtil.getReferer(request));
+        linkQueryInfoDTO.setOs(RequestUtil.getOs(request));
+        linkQueryInfoDTO.setDevice(RequestUtil.getDevice(request));
+        linkQueryInfoDTO.setBrowser(RequestUtil.getBrowser(request));
+        linkQueryInfoDTO.setQueryTime(LocalDateTime.now());
+
+        return linkQueryInfoDTO;
 
     }
 
@@ -120,11 +155,6 @@ public class LinkServiceImpl implements LinkService {
     private Boolean isValidFormat(String targetLink) {
         // 检查链接格式是否正确
         return targetLink.matches(CommonConstant.LINK_FORMAT_REGEX);
-    }
-
-
-    private String getCurrentDomain() {
-        return "https://linkrush.com/";
     }
 
 

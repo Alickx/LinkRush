@@ -4,6 +4,7 @@ import com.alickx.linkrush.common.domain.R;
 import com.alickx.linkrush.api.dto.LinkInfoDTO;
 import com.alickx.linkrush.api.service.LinkService;
 import com.alickx.linkrush.api.vo.LinkCreateVO;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +21,8 @@ public class LinkController {
     }
 
     @GetMapping("/query")
-    public R<LinkInfoDTO> linkInfo(@RequestParam("linkShareCode") String linkShareCode) {
-        return R.ok(linkService.queryLinkInfo(linkShareCode));
+    public R<LinkInfoDTO> linkInfo(@RequestParam("linkShareCode") String linkShareCode, HttpServletRequest request) {
+        return R.ok(linkService.queryLinkInfo(linkShareCode,request));
     }
 
 

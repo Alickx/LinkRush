@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: link-rush-api
+  datasource:
+    url: jdbc:mysql://localhost:3306/link_rush?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
       host: localhost
@@ -11,3 +16,5 @@ spring:
   kafka:
     producer:
       bootstrap-servers: localhost:9092
+  cache:
+    type: redis
